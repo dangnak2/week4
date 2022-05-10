@@ -26,7 +26,6 @@ router.get("/", (req, res) => {
   res.json(movies);
 });
 
-
 // /api/post/movie 주소로 get요청을 보낼시(body에 id를 포함하였을때) 해당 id인 영화를 보여줍니다.
 router.post('/movie', (req, res) => {  
   const index = movies.findIndex(movie => movie.id === req.body.id);
