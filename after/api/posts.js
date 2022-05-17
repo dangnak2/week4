@@ -4,57 +4,115 @@ const router = express();
 
 router.use(express.json());
 
-let nextId = 4; // movies 변수에 id를 설정합니다
+let nextId = 4;
 
-let movies = [ // movies 배열
-  { // movies[0]
+let postData = [
+  {
     id: 1,
-    title: 'Avengers',
+    content: "대충 글 내용 1",
+    writer: 1,
   },
-  { // movies [1]
+  {
     id: 2,
-    title: 'Spider-man',
+    content: "대충 글 내용 2",
+    writer: 2,
   },
-  { // movies [2]
+  {
     id: 3,
-    title: 'Harry Potter',
+    content: "대충 글 내용 3",
+    writer: 3,
   },
 ];
 
-// /api/posts/ - 모든 목록 조회
+// GET /api/posts - 글 목록 조회
 router.get("/", (req, res) => {
-  res.json(movies);
-});
-
-// /api/posts/movies주소로 post요청을 보낼시 배열에 새로운 영화를 추가하여줍니다.
-router.post('/', (req, res) => { 
-  movies.push({
-    id: nextId++, // 처음 nextId 4가 들어간후 nextId가 5가 됩니다
-    title: req.body.title, // req.body.title이 있어야합니다.
+  return res.json({
+    data: postData,
   });
-  res.json(movies);
 });
 
-// /api/posts/movies주소로 put요청을 보낼시 id에 해당하는 영화를 바꿔줍니다.
-router.put('/', (req, res) => {
-  const index = movies.findIndex(movie => movie.id === req.body.id);
-  if (index === -1) { // 해당 영화가 없을시
+// GET /api/posts/:postId - 글 개별 항목 조회
+router.get("/:postId", (req, res) => {
+    const { postId } = req.params;
+    if (!postData[postId - 1]) {
+      return res.json({
+        error: "Post not exist",
+      });
+    }
     return res.json({
-      error: "That movie does not exist",
+      data: postData[postId - 1],
+    });
+  });
+
+// POST /api/posts - 글 생성
+router.post("/", (req, res) => {
+  const { userId } = req.param('X-User-Id');
+  const { id, content } = req.body;
+  const postCount = postData.push({
+    id: nextId++,
+    content,
+    writer: userId,
+  });
+  return res.json({
+    data: {
+      post: {
+        id: postCount,
+      },
+    },
+  });
+});
+
+// PUT /api/posts/:postId - 특정 글 수정
+router.put("/:postId", (req, res) => {
+  // const { userId, content, postId } = req.body;
+  const { postId } = req.params;
+  const userId  = req.header('X-User-Id');
+  const { content } = req.body;
+  const index = postData.findIndex((post) => post.id === postId);
+
+  if (index === -1) {
+    return res.json({
+      error: "Cannot modify post",
     });
   }
 
-  movies[index] = {
-    id: req.body.id,
-    title: req.body.title,
-  };
-  res.json(movies);
+  if (!(postData[index].writer === userId)) {
+    return res.json({
+      error: "Cannot modify post",
+    });
+  }
+
+  postData[index].content = content;
+
+  return res.json({
+    data: {
+      id: postData[index].id,
+    },
+  });
 });
 
-// /api/posts/ delete요청을 보낼시 해당 id에 해당하는 영화를 삭제합니다.
-router.delete('/', (req, res) => {
-  movies = movies.filter(movie => movie.id !== req.body.id);
-  res.json(movies);
+// DELETE /api/posts/:postId - 특정 글 삭제
+router.delete("/:postId", (req, res) => {
+  const { postId } = req.params;
+  const userId  = req.header('X-User-Id');
+  const index = postData.findIndex((post) => post.id === postId);
+
+  if (index === -1) {
+    return res.json({
+      error: "Cannot delete post",
+    });
+  }
+
+  if (!(postData[index].writer === userId)) {
+    return res.json({
+      error: "Cannot delete post",
+    });
+  }
+
+  postData = postData.filter((post) => post.id !== postId);
+  return res.json({
+    data: "Successfully deleted",
+  });
 });
 
 export default router;
