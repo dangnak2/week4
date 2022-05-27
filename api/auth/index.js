@@ -2,7 +2,6 @@ import express from "express";
 import login from "./login";
 import register from "./register";
 
-
 const router = express();
 
 router.use("/login", login);

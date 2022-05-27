@@ -6,10 +6,13 @@
   "author": "dangnak2 <80161984+dangnak2@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon after/index.js --exec babel-node"
+    "dev": "nodemon api/index.js --exec babel-node"
   },
   "dependencies": {
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.20.0",
+    "sequelize-cli": "^6.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.17.10",
