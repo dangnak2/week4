@@ -27,7 +27,7 @@ router.get("/:postId", (req, res) => {
       });
     } else{
       return res.json({
-        data : index[0],
+        data : index[0].id,
     });
     }
   });
@@ -44,7 +44,7 @@ router.post("/", (req, res) => {
   return res.json({
     data: {
       post: {
-        id: index.id,
+        id: index[0].id,
       },
     },
   });
