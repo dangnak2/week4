@@ -1,12 +1,20 @@
 import express from "express";
 import { Posts } from "../models"
+import { verifyToken } from "./middlewares";
 
 const router = express();
 
-router.use(express.json());
+router.post('/validation', verifyToken, (req, res) =>{
+  const {id, password} = req.decode;
+  res.json({
+    id,
+    password
+  });
+});
 
 // GET /api/posts - 글 목록 조회
 router.get("/", (req, res) => {
+  const {id, password} = req.decode;
   const index = Posts.findAll({});
   return res.json({
       data : index,
@@ -15,6 +23,7 @@ router.get("/", (req, res) => {
 
 // GET /api/posts/:postId - 글 개별 항목 조회
 router.get("/:postId", (req, res) => {
+    const {id, password} = req.decode;
     const { postId } = req.params;
 
     const index = Posts.findAll({
@@ -27,14 +36,15 @@ router.get("/:postId", (req, res) => {
       });
     } else{
       return res.json({
-        data : index[0].id,
+        data : Posts[id]
     });
     }
   });
 
 // POST /api/posts - 글 생성
+
 router.post("/", (req, res) => {
-  const { writer } = req.header('X-User-Id');
+  const writer = req.decoded.id;
 
   const index = Posts.create({
       content : req.body.content,
@@ -44,7 +54,7 @@ router.post("/", (req, res) => {
   return res.json({
     data: {
       post: {
-        id: index[0].id,
+        id: index.id,
       },
     },
   });
@@ -53,27 +63,37 @@ router.post("/", (req, res) => {
 // PUT /api/posts/:postId - 특정 글 수정
 router.put("/:postId", (req, res) => {
   const { postId } = req.params;
-  const { writer }  = req.header('X-User-Id');
+  const { writer }  = req.decoded.id;
+  const modifiedContent = req.body.content;
 
   const index = Posts.findAll({
-      id : postId,
+      where: {
+        id : postId,
+        writer : writer
+      }
   });
 
   if (index.length === 0) {
     return res.json({
       error: "Cannot modify post",
     });
-  }
-
-  if (index[0].writer === writer) {
-    Posts.update({
-        content : req.body.content,
-    });
+  } else{
+    Posts.update(
+      {
+        content : modifiedContent
+      },
+      {
+        where: {
+        id : postId,
+        writer : index.id
+        }
+      }
+    );
   }
 
   return res.json({
     data: {
-      id: index[0].id,
+      id: index.id,
     },
   });
 });
@@ -81,7 +101,7 @@ router.put("/:postId", (req, res) => {
 // DELETE /api/posts/:postId - 특정 글 삭제
 router.delete("/:postId", (req, res) => {
   const { postId } = req.params;
-  const { writer }  = req.header('X-User-Id');
+  const { writer }  = req.decoded.id;
 
   // const index = postData.findIndex((post) => post.id === postId);
   const index = Posts.findAll({
@@ -94,9 +114,7 @@ router.delete("/:postId", (req, res) => {
     return res.json({
       error: "Cannot delete post",
     });
-  }
-
-  else if (index[0].writer === writer) {
+  } else if (index.writer === writer) {
     Posts.destroy({
       where:{
         id : postId,

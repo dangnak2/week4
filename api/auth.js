@@ -3,11 +3,13 @@ import { Auth } from "../models";
 import { jwt } from 'jsonwebtoken';
 import { verifyToken } from './middlewares';
 const bcrypt = require('bcrypt');
+const cors = require('cors');
 
 const router = Router();
 
 // POST /api/auth/login - 로그인
 router.post("/login", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000/api/auth/login");
   const { email, password } = req.body;
   
   let index = Auth.findAll({
@@ -46,6 +48,7 @@ router.post("/login", (req, res) => {
 
 // POST /api/auth/register - 회원가입
 router.post("/register", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000/api/auth/login");
   const { email, password } = req.body;
 
   const index = Auth.findAll({
